@@ -1,4 +1,6 @@
+#if !defined(BASE64_DIRECT_CONFIG)
 #include "config.h"
+#endif
 
 // Function parameters for encoding functions:
 #define BASE64_ENC_PARAMS			\
@@ -95,7 +97,7 @@ struct codec
 	#define cpu_to_be64(x)	(x)
 	#define be32_to_cpu(x)	(x)
 	#define be64_to_cpu(x)	(x)
-#endif 
+#endif
 
 // detect word size
 #ifdef _INTEGRAL_MAX_BITS

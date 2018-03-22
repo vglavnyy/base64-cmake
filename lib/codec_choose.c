@@ -6,14 +6,7 @@
 #include "../include/libbase64.h"
 #include "codecs.h"
 
-#if (__x86_64__ || __i386__ || _M_X86 || _M_X64)
-  #define BASE64_X86
-  #if (HAVE_SSSE3 || HAVE_SSE41 || HAVE_SSE42 || HAVE_AVX || HAVE_AVX2)
-    #define BASE64_X86_SIMD
-  #endif
-#endif
-
-#ifdef BASE64_X86
+#if __x86_64__ || __i386__ || _M_X86 || _M_X64
 #ifdef _MSC_VER
 	#include <intrin.h>
 	#define __cpuid_count(__level, __count, __eax, __ebx, __ecx, __edx) \
@@ -163,17 +156,19 @@ codec_choose_arm (struct codec *codec)
 static bool
 codec_choose_x86 (struct codec *codec)
 {
-#ifdef BASE64_X86_SIMD
+#if (__x86_64__ || __i386__ || _M_X86 || _M_X64) && (HAVE_AVX2 || HAVE_SSSE3 || HAVE_SSE41 || HAVE_SSE42 || HAVE_AVX)
 
 	unsigned int eax, ebx = 0, ecx = 0, edx;
 	unsigned int max_level;
 
 	#ifdef _MSC_VER
-	int info[4];
-	__cpuidex(info, 0, 0);
-	max_level = info[0];
-	#else
-	max_level = __get_cpuid_max(0, NULL);
+  {
+    int info[4];
+    __cpuidex(info, 0, 0);
+    max_level = info[0];
+  }
+  #else
+  max_level = __get_cpuid_max(0, NULL);
 	#endif
 
 	#if HAVE_AVX2 || HAVE_AVX

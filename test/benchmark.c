@@ -4,7 +4,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#if _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -50,7 +54,18 @@ bytes_to_mb (size_t bytes)
 }
 
 static bool
-get_random_data (struct buffers *b, char **errmsg)
+get_random_data(struct buffers *b, char **errmsg)
+#if _WIN32
+{
+  printf("Filling buffer with %.1f MB of random data...\n", bytes_to_mb(b->regsz));
+  size_t total_read = 0;
+
+  for (size_t total_read = 0; total_read < b->regsz; total_read++) {
+    b->reg[total_read] = rand();
+  }
+  return true;
+}
+#else
 {
 	int fd;
 	ssize_t nread;
@@ -75,6 +90,8 @@ get_random_data (struct buffers *b, char **errmsg)
 	close(fd);
 	return true;
 }
+#endif
+
 
 #ifdef __MACH__
 typedef uint64_t base64_timespec;
@@ -98,7 +115,11 @@ typedef struct timespec base64_timespec;
 static void
 base64_gettime (base64_timespec * o_time)
 {
-	clock_gettime(CLOCK_REALTIME, o_time);
+#if _WIN32
+  timespec_get(o_time, TIME_UTC);
+#else
+  clock_gettime(CLOCK_REALTIME, o_time);
+#endif
 }
 
 static float
